@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Vue 3 basics</title>
+        <style>
+            .box {
+                background-color: purple;
+                height: 200px;
+                width: 200px;
+            }
+            .box.two {
+                background-color: red;
+            }
+            .box.three {
+                background-color: blue;
+            }
+            [v-cloak] {
+                display: none;
+            }
+            input {
+                margin: 10px;
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app" v-cloak>
+            {{ greeting }} 
+            <input v-model="greeting"/>
+            <!-- cannot put custom component directly onto the main html, the content behind it will be removed -->
+
+            <hr />
+            <div v-if='isVisible' class="box"></div>
+            <div v-else-if='isVisible2' class="box two"></div>
+            <div v-else class="box three"></div>
+
+            <hr/>
+            <button v-on:click="isVisible3 = !isVisible3" >Toggle Box (v-on:click)</button>
+            <button @click="isVisible3 = !isVisible3" >Toggle Box (@click='statement')</button>
+            <button @click.right="toggleBox">Toggle box (@click='function')</button>
+            <div v-if='isVisible3' class="box"></div>
+
+            <hr/>
+            <input @keyup.enter="greet(greeting2 + '!!!!')" v-model="greeting2"/>
+            
+            <hr/>
+            <!-- <login-form /> -->
+
+            <hr/>
+            <button @click="toggleBoxCustom">Toggle custom box </button>
+            <custom-box v-if="isVisibleCustom"/>
+            
+
+        </div>
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <script>
+            let app = Vue.createApp({
+                data: function() {
+                    return {
+                        greeting: 'Hello Vue 3!!', 
+                        isVisible: true,
+                        isVisible2: true,
+                        isVisible3: false,
+                        greeting2: 'Hello World', 
+                        isVisibleCustom: true
+                    }
+                }, 
+                methods: {
+                    toggleBox () {
+                        this.isVisible3 = !this.isVisible3
+                    },
+                    toggleBoxCustom () {
+                        this.isVisibleCustom = !this.isVisibleCustom
+                    },
+                    greet(argument) {
+                        // console.log(this.greeting2) //Both are okay
+                        console.log(argument)
+                    }
+                },
+                updated() {
+                    console.log('updated')
+                }
+            })
+            app.component('login-form', {
+                template:`
+                    <form @submit.prevent='handleSubmit'>
+                        <h1>{{title}}</h1>
+                        <!-- <p v-for='(str,i) in inputs' :key='i'>{{str}}</p> -->
+                        <!-- <custom-input v-model='email' v-bind:label='emailLabel'/> -->
+                        <!-- <custom-input v-model='password' :label='passwordLabel'/> -->
+
+                        <custom-input 
+                            v-for='(input,i) in inputs'
+                            :key='i'
+                            v-model='input.value' 
+                            v-bind:label='input.label'
+                            :type='input.type'
+                        />
+                        <button>Log in</button>
+                    </form>
+                `, 
+                components: ['custom-input'],
+                data () {
+                    return {
+                        title: 'Login Form',
+                        email: '', 
+                        password: '', 
+                        emailLabel: 'Email', 
+                        passwordLabel:'Password',
+                        inputs: [
+                            {label: 'Email', value:'', type:'email'},
+                            {label: 'Password', value:'', type:'password'},
+                        ]
+                    }
+                }, 
+                methods: {
+                    handleSubmit(e) {
+                        e.preventDefault()
+                        // console.log('submitted: ', this.email, this.password)
+                        console.log('submitted: ', this.inputs[0].value, this.inputs[1].value)
+                    }
+                }
+            }) 
+            app.component('custom-input', {
+                template: `
+                    <label>
+                        {{label}} 
+                        <input :type='type' v-model='inputValue'/>
+                    </label>
+                `, 
+                props: ['label', 'type', 'modelValue'],
+                computed: {
+                    inputValue: {
+                        get() {
+                            return this.modelValue
+                        },
+                        set(value) {
+                            this.$emit('update:modelValue', value)
+                        }
+                    }
+                },
+                // data() {
+                //     return {
+                //         inputValue:''
+                //     }
+                // }
+            }), 
+            app.component('custom-box', {
+                template: `
+                    <div class='box'>Test</div>
+                `,
+                created() {
+                    console.log('created')
+                },
+                mounted() {
+                    console.log('mounted')
+                },
+                unmounted() {
+                    console.log('unmounted')
+                }
+            })
+            app.mount('#app')
+        </script>
+    </body>
+</html>
+
+<!-- Learning Notes -->
+<!-- inside Vue object, there are different keys like data, methods, etc. -->
+<!-- inside data function has option object -->
+<!-- v-model is a directive, like an attribute in a tag. V model directive allows 2-way data binding -->
+<!-- v-show make display:none, v-if does not render the element if it is false-->
+<!-- v-on is specific for event -->
+<!-- function => data: function() {...}, function shorthand => data() {...} -->
+<!-- we could to add modifier keyboard events, click events, eg. @keydown.13, @click.right, @click.prevent.stop-->
+<!-- can create custom tag as a Vue Component -->
+<!-- Use v-for to map the same component multiple times -->
